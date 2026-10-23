@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>App Configuration Test Page</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #1f2d3d; }
+    h1 { font-size: 20px; }
+    label { display: block; margin-top: 16px; font-weight: bold; }
+    input, select { padding: 8px; width: 320px; }
+    button { margin-top: 16px; padding: 8px 16px; }
+    pre { background: #f4f6f8; padding: 12px; max-height: 220px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1 id="page-title">App Configuration Test Page</h1>
+  <p id="loaded">Loaded at: <span id="time"></span></p>
+  <p>Query string: <code id="query"></code></p>
+  <p>Framed in host: <code id="framed"></code></p>
+
+  <form id="config-form">
+    <label for="api-key">Setting name</label>
+    <input id="api-key" name="setting" placeholder="Enter a test value">
+    <label for="mode">Mode</label>
+    <select id="mode" name="mode"><option>Basic</option><option>Advanced</option></select>
+    <br>
+    <button type="submit" id="save-btn">Save</button>
+  </form>
+  <p id="status" role="status"></p>
+
+  <h2>Messages received from host</h2>
+  <pre id="log">(none yet)</pre>
+
+  <script>
+    document.getElementById('time').textContent = new Date().toISOString();
+    document.getElementById('query').textContent = location.search || '(none)';
+    document.getElementById('framed').textContent = String(window.self !== window.top);
+
+    const log = document.getElementById('log');
+    window.addEventListener('message', (e) => {
+      if (log.textContent === '(none yet)') log.textContent = '';
+      log.textContent += `origin=${e.origin} data=${JSON.stringify(e.data)}\n`;
+    });
+
+    document.getElementById('config-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const payload = { type: 'test-config-saved', setting: e.target.setting.value, mode: e.target.mode.value };
+      document.getElementById('status').textContent = 'Saved locally: ' + JSON.stringify(payload);
+      if (window.parent !== window) window.parent.postMessage(payload, '*');
+    });
+  </script>
+</body>
+</html>
